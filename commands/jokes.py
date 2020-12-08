@@ -3,14 +3,13 @@ import random
 from discord.ext import commands
 from random import randint
 
-allowedChannels = [588354715625193473, 579538738988711958]
-
 class jokes(commands.Cog, name='memery bullshit'):
     """
     Gregory is a dank memer :sunglasses:
     """
     def __init__(self, client):
         self.client = client
+        self.allowedChannels = [588354715625193473, 579538738988711958]
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -18,7 +17,7 @@ class jokes(commands.Cog, name='memery bullshit'):
         if message.author == self.client.user:
             return
         
-        if "fuck" in message.content.lower() and message.channel in allowedChannels:
+        if "fuck" in message.content.lower() and message.channel in self.allowedChannels:
             fBombs = message.content.lower().count("fuck")
             if fBombs == 1:
                 plural = "f-bomb"
