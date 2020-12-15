@@ -7,7 +7,7 @@ import aiohttp
 async def get_weather_data(id):
     async with aiohttp.ClientSession() as session:
         if id == ' ' or id.isnumeric() == False:
-            async with session.get(f'http://xkcd.com//info.0.json') as response:
+            async with session.get(f'http://xkcd.com/info.0.json') as response:
                 json = await response.json()
                 id = randint(1, json['num'])
 
