@@ -4,7 +4,7 @@ from random import randint
 
 import aiohttp
 
-async def get_weather_data(id):
+async def get_data(id):
     async with aiohttp.ClientSession() as session:
         if id == ' ' or id.isnumeric() == False:
             async with session.get(f'http://xkcd.com/info.0.json') as response:
@@ -15,7 +15,7 @@ async def get_weather_data(id):
             return await response.json()
 
 async def get_xkcd(id = ' '):
-    data = await get_weather_data(id)
+    data = await get_data(id)
     return data
 
 if __name__ == '__main__':

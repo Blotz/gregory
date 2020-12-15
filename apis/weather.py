@@ -3,13 +3,13 @@ import json
 
 import aiohttp
 
-async def get_data(query):
+async def get_weather_data(query):
     async with aiohttp.ClientSession() as session:
         async with session.get(f'https://wttr.in/{query.lower().replace(" ","+")}?format=j1') as response:
             return await response.json()
 
 async def get_current(query):
-    data = await get_data(query)
+    data = await get_weather_data(query)
     if data['request'][0]['query'] == 'Not, Austria':
         return None
     else:
