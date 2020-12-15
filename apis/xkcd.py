@@ -16,7 +16,6 @@ async def get_weather_data(id):
 
 async def get_xkcd(id = ' '):
     data = await get_weather_data(id)
-    print(data)
     return data
 
 if __name__ == '__main__':
