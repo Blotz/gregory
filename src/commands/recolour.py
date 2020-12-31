@@ -23,7 +23,8 @@ class recolour(commands.Cog, name='useful'):
     @commands.command(aliases=['recolor', 'rc'])
     async def recolour(self, ctx, colour='green', strength:float=100):
         '''
-        call with image attached. colour can be one of [red, orange, yellow, green, blue, purple], or just the first letter of any.
+        Call with image attached. colour can be one of [red, orange, yellow, green, blue, purple], or just the first letter of any.
+        If no image is attached, bot will search recent messages for the most recent image or image link.
         '''
         
         colour = colour.lower()
@@ -49,12 +50,12 @@ class recolour(commands.Cog, name='useful'):
         # What to do when no attachment is sent with the file: Search prev. messages for a file, also for links.
         if not ctx.message.attachments:
             foundImage = False
-            msgLimit = 10
+            msgLimit = 200
             regex = re.compile(r'https?:/.*\.(png|jpg|jpeg|gif|jfif|bmp)')
             
             searchingMessage = await ctx.send(f'Searching for image in last {msgLimit} messages…')
             async with aiohttp.ClientSession() as session:
-                async for msg in ctx.channel.history(limit=msgLimit): # Amazing regex to check for links (more or less)
+                async for msg in ctx.channel.history(limit=msgLimit): # regex to check for images in links
                     if msg.attachments:
                         data = await msg.attachments[0].read()
                         if not self.isImage(data): continue
@@ -68,19 +69,9 @@ class recolour(commands.Cog, name='useful'):
                             if not self.isImage(data): continue
                             foundImage = True
                             break
-            await searchingMessage.edit(content=f'Searching for Image in last {msgLimit} messages…{"No "*foundImage}Image found in last {msgLimit} messages.')
-            
+            await searchingMessage.edit(content=f'Searching for Image in last {msgLimit} messages…{"No "* False * foundImage}Image {"successfully " * foundImage}found in last {msgLimit} messages.')
 
-## using a predefined ClientSession within a cog
-#def __init__(self, bot, ...):
-#    ...
-#    self.session = aiohttp.ClientSession(loop=bot.loop)
-#    ...
-#    # then use self.session.get similar to above
-
-#https://github.com/Rapptz/discord.py/issues/1279
-
-        else:
+        else: # If there is an attachment, just read the data from it.
             data = await ctx.message.attachments[0].read()
 
         img = Image.open(io.BytesIO(data))
