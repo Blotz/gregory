@@ -13,7 +13,7 @@ class recolour(commands.Cog, name='useful'):
 
     def isImage(self, data):
         try:
-            Image.open(data)
+            Image.open(io.BytesIO(data))
         except IOError:
             return False
         return True
@@ -46,30 +46,29 @@ class recolour(commands.Cog, name='useful'):
         if len(colour) == 1:
             colour = additionColours[colour]
 
+        # What to do when no attachment is sent with the file: Search prev. messages for a file, also for links.
         if not ctx.message.attachments:
+            foundImage = False
             msgLimit = 10
             regex = re.compile(r'https?:/.*\.(png|jpg|jpeg|gif|jfif|bmp)')
             
-            await ctx.send(f'Searching for image in last {msgLimit} messages…')
-            async for msg in ctx.channel.history(limit=msgLimit): # Amazing regex to check for links (more or less)
-                print(msg.content)
-                m = regex.search(msg.content)
-                if m:
-                    print('xxxxxxxxxxxxxxxxx')
-                    print(m.group())
-                    async with aiohttp.ClientSession() as session:
-                        print('dddddddddddddddddddddddd')
-                        # note that it is often preferable to create a single session to use multiple times later - see below for this.
-                        async with session.get(m.group()) as resp:
-                            print('xkkkkkkkkkkkkkkkkkkkkkkkkk')
-                            buf = io.BytesIO(await resp.read())
-                            if not self.isImage(buf): continue
+            searchingMessage = await ctx.send(f'Searching for image in last {msgLimit} messages…')
+            async with aiohttp.ClientSession() as session:
+                async for msg in ctx.channel.history(limit=msgLimit): # Amazing regex to check for links (more or less)
+                    if msg.attachments:
+                        data = await msg.attachments[0].read()
+                        if not self.isImage(data): continue
+                        foundImage = True
+                        break
 
-                if msg.attachments:
-                    data = await msg.attachments[0].read()
-                    if not self.isImage(io.BytesIO(data)): continue
-                    break
-            await ctx.send(f'No image found in last {msgLimit} messages.')
+                    m = regex.search(msg.content)
+                    if m:
+                        async with session.get(m.group()) as resp:
+                            data = await resp.read()
+                            if not self.isImage(data): continue
+                            foundImage = True
+                            break
+            await searchingMessage.edit(content=f'Searching for Image in last {msgLimit} messages…{"No "*foundImage}Image found in last {msgLimit} messages.')
             
 
 ## using a predefined ClientSession within a cog
@@ -85,6 +84,8 @@ class recolour(commands.Cog, name='useful'):
             data = await ctx.message.attachments[0].read()
 
         img = Image.open(io.BytesIO(data))
+
+        img = img.convert('RGBA') # In case image (e.g. JPG) is in 'RGB' or else mode.
 
         for i in range(0, img.size[0]): # process all pixels
             for j in range(0, img.size[1]):
